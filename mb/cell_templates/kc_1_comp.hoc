@@ -1,0 +1,65 @@
+//execute1("celltypes.element(\"KC\")")
+
+begintemplate KC
+public init, topol, basic_shape, subsets, geom, biophys, geom_nseg, biophys_inhomo
+public synlist, x, y, z, position, connect2target
+
+public soma
+public all, somatic
+
+objref synlist
+
+proc init() {
+  subsets()
+  geom()
+  biophys()
+  synlist = new List()
+  synapses()
+}
+
+create soma
+
+
+objref all
+proc subsets() { local i
+  objref all
+  all = new SectionList()
+  soma all.append()
+}
+proc geom() {
+     soma {  // Total Cm = 4 pF
+         L = 6.366
+	 diam = 20
+	 }
+}
+external lambda_f
+proc biophys() {
+  forsec all {
+    Ra = 35.4
+    cm = 1
+    insert pas
+      g_pas = 9.75e-5         // S/cm2
+      e_pas = -70             // mV
+    insert kv
+      gbar_kv = 1.5e-3       // S/cm2
+    insert ka
+      gbar_ka = 1.4525e-2    // S/cm2
+    insert kst
+      gbar_kst = 2.0275e-3   // S/cm2
+    insert naf
+      gbar_naf = 3.5e-2      // S/cm2
+    insert nas
+      gbar_nas = 3e-3        // S/cm2
+      ek = -81.0             // mV
+      ena = 58.0               // mV
+  }
+}
+obfunc connect2target() { localobj nc //$o1 target point process, optional $o2 returned NetCon
+  soma nc = new NetCon(&v(1), $o1)
+  nc.delay = 1.0   
+  nc.threshold = -20.0  // mV
+  if (numarg() == 2) { $o2 = nc } // for backward compatibility
+  return nc
+}
+proc synapses() {}
+endtemplate KC

@@ -1,0 +1,124 @@
+--- # Configuration file for PN->KC<->GGN network
+# rngseed: 9502               # random seed for numpy
+
+stimulus:
+    onset: 0.5s                   # when the stimulus starts (PN spiking rate increases)
+    duration: 1.0s                # duration of stimulus
+    tail: 1s                    # duration of simulation post stimulus end time
+    stabilization_time: 0.2s    # not even spontaneous activity - allow each cell to reach its resting Vm
+    
+pn: 
+    delta: 5ms                  # parameter for inhomogeneous Poisson process to generate the PN spike times
+    number: 830                 # number of PNs
+    odor_exc_frac: 0.2          # fraction of all PNs excited by odor
+    odor_inh_frac: 0.1          # fraction of spontaneously active PNs inhibited by odor - guessed
+    spont_exc_frac: 0.77        # fraction of PNs spontaneously active
+    stim_rate: 20.0Hz           # baseline firing rate of a PN upon stimulus
+    spont_rate: 2.6Hz           # baseline firing rate of a PN during spontaneous activity
+    osc_freq: 20.0Hz            # LFP oscillaion frequency
+    osc_amp_scale: 0.4          # the oscillation amplitude as a fraction of baseline firing rate
+    offdur: 0.5s                  # duration of off response
+    shifting: false             # whether to make PN population with shifting activity time
+    start_frac: 0.7             # what fraction of PNs start together (shifting activity)
+    shifting_frac: 0.1          # what fraction will be newly recruited at each time bin
+
+kc:
+    filename: cell_templates/kc_1_comp.hoc    # celltemplate filename
+    name: KC             # name of the celltemplate
+    number: 50000        # total number of KCs
+    lca_frac: 0.7        # fraction of KC population located in LCA / synapsed by LCA branch of GGN
+    n_vm: 500            # number of KCs to record Vm from
+    cluster_size: 1000    # number of KCs in each spatial cluster
+    # cluster_rs: 1058      # Random seed to reproduce cluster
+    fake_clusters: False   # Create fake clusters to compare with spatial clustering of coactive KC->GGN connections
+    shared_pn_frac: 0.8   # fraction of PN inputs KCs in each cluster share
+
+ggn:
+    filename: cell_templates/GGN_20170309_sc.hoc      # celltemplate filename
+    name: GGN_20170309_sc                             # celltemplate name
+    RA: 100ohm*cm
+    RM: 33.33kohm*cm**2
+    dclamp: False                                  # whether to create dynamic clamp
+    dclamp_file: ''    # dclamp_input/20170929_mbl_1_hxa_2_t01_filtered.npy                           # dynamic clamp file input
+    dclamp_sec: dend[1]                               # dynamic clamp target section
+    dclamp_pos: 0.5                                   # position in dynamic clamp section
+
+pn_kc_syn:  # PN->KC synapse properties
+    tau: 13.333ms        # tau1 = tau2 = tau for synaptic conductance
+    e: 0.0mV             # reversal potential
+    gmax: 3.0pS          # maximum synaptic conductance
+    presyn_frac: 0.5     # fraction of PN population presynaptic to each KC
+    clustered: false     # whether the PNs should be connected to KCs by clusters - overridden by --pn_kc_clustered
+    clustered_pre: false   # Whether PNs are also in clusters and there should be cluster to cluster connections
+    std: 1.0             # if > 0, lognormal distribution with mean=gmax and std = std * gmax
+    delay: 0.0ms         # mean synaptic delay
+    delay_sd: 0.0ms      # sd in synaptic delay
+    
+kc_ggn_alphaL_syn:       # KC->GGN synapses in alpha lobe
+    threshold: -20.0mV
+    delay: 5.0ms         # 0.5 m/s -> 2 mm takes 4 ms, + 1ms for synaptic delay
+    e: 0.0mV
+    tau1: 13.333ms
+    tau2: 13.333ms
+    gmax: 20pS
+    std: 1.0
+
+kc_ggn_CA_syn:           # KC-GGN synapses in calyx
+    threshold: -20.0mV
+    delay: 1.0ms
+    e: 0.0mV
+    tau1: 13.333ms
+    tau2: 13.333ms
+    gmax: 0pS
+    # present: false     # whether to add synapses of this kind - overridden by --ca
+    clustered: false    # are these to be clustered spatially on GGN?
+    regional: false    # are KCs restricted to one of LCA and MCA - overridden by --regional
+
+ggn_kc_syn:           # GGN->KC graded synapse : gradedsyn.mod based on Papadopoulou, et al., 2011
+    vmid: -40.0mV     # -40mV in Papadopoulou et al 2011
+    vslope: 5.0mV     # 5 mV in Papadopoulou  et al 2011
+    gmax: 0.7nS          # 50nS in Papadopoulou, et al., 2011
+    tau: 4.0ms           # 4ms in  Papadopoulou, et al., 2011
+    e: -80mV             # -90 mV in Papadopoulou et al., 2011, often -80 for GABA
+    std: 1.0            # This is based on Song, et al., 2005 PLOS biol. (supp)
+    frac_weakly_inhibited: 0.0      # Fraction of KCs that receive relatively weak inhibition from GGN
+    gmax_weakly_inhibited: 0.1nS     # Inhibitory conductance on weakly inhibited KCs
+    
+# ig:
+#     filename: ''  # IzhiGS  # dclamp_input/ig_spikerate.npy  # IzhiGS for Izhikevich model with Graded synapse
+#     inject: 70.0
+    
+# ig_ggn_syn:
+#     threshold: -20.0mV
+#     delay: 5.0ms
+#     e: -80.0mV
+#     tau1: 1ms
+#     tau2: 5ms
+#     gmax: 100nS
+#     target: 'dend[1]'
+
+# ggn_ig_syn:           # GGN->KC graded synapse : gradedsyn.mod based on Papadopoulou, et al., 2011
+#     vmid: -40.0mV     # -40mV in Papadopoulou et al 2011
+#     vslope: 5.0mV     # 5 mV in Papadopoulou  et al 2011
+#     gmax: 0.05uS
+#     # tau: 4.0ms           # 4ms in  Papadopoulou, et al., 2011
+#     # e: -80mV             # -90 mV in Papadopoulou et al., 2011, often -80 for GABA
+#     source: 'dend[1]'
+
+# pn_ig_syn:  # PN->IG synapse properties
+#     weight: 0.2         # maximum synaptic conductance
+#     delay: 100ms
+#     threshold: -20mV
+#     tau: 13.33ms
+    
+# kc_ig_syn:  # KC->IG synapse properties
+#     weight: 0.5        # maximum synaptic conductance
+#     delay: 10ms
+#     threshold: -20mV
+#     tau: 13.33ms       # this is actually hard coded in the mod file. ignored.
+#     std: 1.0
+
+output:
+    directory: /data/rays3/ggn/olfactory_network    # directory to dump simulation results in
+    
+    
