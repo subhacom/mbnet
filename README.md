@@ -1,3 +1,4 @@
+
 This directory contains scripts for simulating the GGN model and the
 mushroom body olfactory circuit around it in NEURON 7.4 with Python
 2.7 related to the article:
@@ -6,135 +7,135 @@ mushroom body olfactory circuit around it in NEURON 7.4 with Python
 Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
 
 
-<a id="org2f03dda"></a>
+<a id="org313face"></a>
 
 # analysis
 
 -   various example scripts for analyzing simulated data.
 
 
-<a id="org66870b1"></a>
+<a id="org1af6577"></a>
 
 # common
 
--   nhpp.py : Generate times for nonhomogeneous Poisson process
+-   `nhpp.py` : Generate times for nonhomogeneous Poisson process
 
 
-<a id="org436e58b"></a>
+<a id="orge9319ec"></a>
 
 # mb
 
 
-<a id="org18dfcff"></a>
+<a id="org14bb4c0"></a>
 
-## cell<sub>templates</sub>
+## `cell_templates`
 
--   GGN<sub>20170309</sub><sub>sc.hoc</sub> : cell template for GGN model
--   kc<sub>1</sub><sub>comp.hoc</sub> : single compartmental KC model
+-   `GGN_20170309_sc.hoc` : cell template for GGN model
+-   `kc_1_comp.hoc` : single compartmental KC model
 
 
-<a id="org2d6beb8"></a>
+<a id="org6ea2f46"></a>
 
 ## mod: contains mechanism files
 
 
-<a id="org97a33c4"></a>
+<a id="orgb25354e"></a>
 
 ## network
 
--   change<sub>pn</sub><sub>spikes.py</sub> : take a simulated data file and create
+-   `change_pn_spikes.py` : take a simulated data file and create
     another one after modifying the PN spike times, so that same model
     is simulated with modified spike input.
--   config.yaml : configuration file for setting network model
+-   `config.yaml` : configuration file for setting network model
     parameters
--   fixed<sub>network</sub><sub>changing</sub><sub>stim.py</sub> : simulate a given network model
+-   `fixed_network_changing_stim.py` : simulate a given network model
     with different PN spike inputs.
--   kc<sub>ggn</sub><sub>feedback</sub><sub>dclamp.py</sub> : test of single KC with GGN inhibition
-    when the GGN is driven by a dynamic clamp.
--   kc<sub>ggn</sub><sub>feedback</sub><sub>frequency</sub><sub>sweep.py</sub> : amplitude and frequency
+-   `kc_ggn_feedback_dclamp.py` : test of single KC with GGN
+    inhibition when the GGN is driven by a dynamic clamp.
+-   `kc_ggn_feedback_frequency_sweep.py` : amplitude and frequency
     sweeps for testing effect of GGN feedback on a single KC.
--   kc<sub>ggn</sub><sub>nofeedback</sub> : script to simulate KC with no feedback
+-   `kc_ggn_nofeedback.py` : script to simulate KC with no feedback
     alongside KC with feedback inhibition from GGN.
--   pn<sub>kc</sub><sub>ggn</sub><sub>network.py</sub> : script to setup and simulate the mushroom
+-   `pn_kc_ggn_network.py` : script to setup and simulate the mushroom
     body network model (uses config.yaml for parameters).
--   pn<sub>output.py</sub> : script to setup PN spike trains
--   tweak<sub>template.py</sub> : script to modify an existing network template
-    (in a data file dumped by an earlier simulation).
+-   `pn_output.py` : script to setup PN spike trains
+-   `tweak_template.py` : script to modify an existing network
+    template (in a data file dumped by an earlier simulation).
 
 
-<a id="org87bf80e"></a>
+<a id="orgd3fb948"></a>
 
 ## slurm : utility scripts for running simulations in batch mode under slurm (on NIH biowulf).
 
--   batch<sub>run</sub><sub>remove</sub><sub>kcs</sub><sub>run.sh</sub> : example script for running successive
+-   `batch_run_remove_kcs_run.sh` : example script for running successive
     simulations after removing high spiking KCs.
--   circular<sub>run</sub> : scripts for running running successive simulations
+-   `circular_run` : scripts for running running successive simulations
     after removing high spiking KCs. These scripts read last job ids
     from a specified file to identify the corresponding data dumps,
     remove high spiking kcs from those model templates, and run the
     simulation again until no more highspiking KC is left.
--   run<sub>fixed</sub><sub>net</sub><sub>changing</sub><sub>stim.py</sub>: example utility script to run
+-   `run_fixed_net_changing_stim.py` : example utility script to run
     simulation of a given network model with changed PN inputs as a
     subprocess.
--   run<sub>fixed</sub><sub>net</sub><sub>with</sub><sub>ig.sh</sub> : sample script to run a given network
+-   `run_fixed_net_with_ig.sh` : sample script to run a given network
     template including IG with different PN inputs.
--   run<sub>fixed</sub><sub>network</sub><sub>changing</sub><sub>stim.sh</sub> : script to run a fixed network
+-   `run_fixed_network_changing_stim.sh` : script to run a fixed network
     template while changing the PN input pattern.
--   run<sub>kc</sub><sub>ggn</sub><sub>feedback</sub><sub>amp</sub><sub>sweep.sh</sub>,
-    run<sub>kc</sub><sub>ggn</sub><sub>nofeedback</sub><sub>amp</sub><sub>sweep.sh</sub> : scripts to test single KC with
+-   `run_kc_ggn_feedback_amp_sweep.sh`,
+    `run_kc_ggn_nofeedback_amp_sweep.sh` : scripts to test single KC with
     and without GGN feedback.
--   run<sub>mb</sub><sub>net.sh</sub> : script to run mushroom body network model in batch mode.
--   run<sub>to</sub><sub>reproduce</sub><sub>ggn</sub><sub>vm</sub><sub>no</sub><sub>seed.sh</sub>, run<sub>to</sub><sub>reproduce</sub><sub>ggn</sub><sub>vm.sh</sub>,
-    run<sub>to</sub><sub>reproduce</sub><sub>ggn</sub><sub>vm</sub><sub>with</sub><sub>shifting</sub><sub>pn.sh</sub>: scripts that run
+-   `run_mb_net.sh` : script to run mushroom body network model in batch mode.
+-   `run_to_reproduce_ggn_vm_no_seed.sh`, `run_to_reproduce_ggn_vm.sh`,
+    `run_to_reproduce_ggn_vm_with_shifting_pn.sh`: scripts that run
     multiple simulations while changing parameters to reproduce
     realistic GGN voltage trace.
--   run<sub>with</sub><sub>ig.sh</sub> : script to simulate network model with IG
+-   `run_with_ig.sh` : script to simulate network model with IG
     included.
 
 
-<a id="org2e77656"></a>
+<a id="orgb2d4314"></a>
 
-## test<sub>cell</sub>
+## `test_cell`
 
--   ggn<sub>voltage</sub><sub>attenuation</sub><sub>vclamp.py</sub> : check voltage attenuation
+-   `ggn_voltage_attenuation_vclamp.py` : check voltage attenuation
     along GGN arbor when one branch is voltage clamped.
--   run<sub>param</sub><sub>sweep</sub><sub>vclamp.py</sub> : test voltage attenuation along GGN
+-   `run_param_sweep_vclamp.py` : test voltage attenuation along GGN
     arbor with voltage clamp while changing passive properties.
 
 
-<a id="org0fc9385"></a>
+<a id="org470dd85"></a>
 
 # morphutils
 
--   cellmovie.py : dump a video of rotating neuron in 3D
--   displaycell.py : display neuronal morphology from SWC file
--   morph3d<sub>\*</sub>.py : display neuronal morphology in 3D using
+-   `cellmovie.py` : dump a video of rotating neuron in 3D
+-   `displaycell.py` : display neuronal morphology from SWC file
+-   `morph3d_*.py` : display neuronal morphology in 3D using
     corresponding module.  Use vtk/vispy/matplotlib to display 3D
     morphology.
--   neurograph.py : handle morphology as a graph.  This file contains
+-   `neurograph.py` : handle morphology as a graph.  This file contains
     data type definitions and functions to read an SWC file and turn
     it into a graph (using networkx).  There is also GGN specific
     mapping where I assign custom types to specific branches based on
     anatomical location.
 
 
-<a id="orge51345c"></a>
+<a id="org39f5aa9"></a>
 
 # nrn
 
--   nrnutils.py : Utilities for handling NEURON model
+-   `nrnutils.py` : Utilities for handling NEURON model
     -   convert a NEURON cell model into a networkx graph
     -   insert alpha synapses
     -   insert ion channel mechanisms
     -   set up recording of Vm
--   localized<sub>input</sub><sub>output.py</sub> : apply synaptic inputs at specified
+-   `localized_input_output.py` : apply synaptic inputs at specified
     branches.  This scripts runs simulation with synchronous synaptic
     inputs at multiple compartments on specific branches.
--   localized<sub>input</sub><sub>output</sub><sub>passive</sub><sub>sweep.py</sub> : apply synaptic inputs at
+-   `localized_input_output_passive_sweep.py` : apply synaptic inputs at
     specified branches of GGN models with different passive
     properties.
--   nrninit.bat, nrninit.sh : batch file (Windows) and shell script
+-   `nrninit.bat`, `nrninit.sh` : batch file (Windows) and shell script
     (Linux).  Initialize PYTHONPATH to include various model related
     Python scripts
--   staggered<sub>input.py</sub> : simulate synaptic input at random
+-   `staggered_input.py` : simulate synaptic input at random
     compartments in specified branch
