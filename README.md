@@ -30,6 +30,7 @@ Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
 
 ## `cell_templates`
 
+-   `GGN_20170309_sc.swc` : shrinkage corrected trace of GGN morphology.
 -   `GGN_20170309_sc.hoc` : cell template for GGN model
 -   `kc_1_comp.hoc` : single compartmental KC model
 
