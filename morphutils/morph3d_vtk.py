@@ -7,9 +7,9 @@
 # Created: Thu Jul 14 18:34:15 2016 (-0400)
 # Version: 
 # Package-Requires: ()
-# Last-Updated: Tue Aug 15 18:16:02 2017 (-0400)
+# Last-Updated: Fri Apr  2 09:24:26 2021 (-0400)
 #           By: Subhasis Ray
-#     Update #: 695
+#     Update #: 731
 # URL: 
 # Doc URL: 
 # Keywords: 
@@ -40,14 +40,18 @@ import numpy as np
 import networkx as nx
 from neurograph import nodecolor_10cp, nodecolor_4cp
 
-def create_labels(graph, label_nodes, labels=[], priorities=[]):
+def create_labels(graph, label_nodes, labels=[], priorities=[],
+                  color=(0, 0, 0)):
     label_points = vtk.vtkPoints()
     label_str = vtk.vtkStringArray()
     label_str.SetName('Labels')
+    label_prop = vtk.vtkTextProperty()
+    label_prop.SetColor(*color)
+    label_prop.ItalicOn()
     for ii, n in enumerate(label_nodes):
-        label_points.InsertNextPoint((graph.node[n]['x'],
-                                      graph.node[n]['y'],
-                                      graph.node[n]['z']))
+        label_points.InsertNextPoint((graph.nodes[n]['x'],
+                                      graph.nodes[n]['y'],
+                                      graph.nodes[n]['z']))
         if len(labels) == len(label_nodes):
             label = str(labels[ii])
         else:
@@ -58,20 +62,24 @@ def create_labels(graph, label_nodes, labels=[], priorities=[]):
     label_polydata.GetPointData().AddArray(label_str)
     hierarchy = vtk.vtkPointSetToLabelHierarchy()
     hierarchy.SetLabelArrayName(label_str.GetName())
+    hierarchy.GetTextProperty().SetColor(*color)
     if (len(priorities) > 0) and (len(priorities) == len(label_nodes)):
         parray = vtk.vtkIntArray()
         parray.SetName('Priorities')
         for priority in priorities:
             parray.InsertNextValue(priority)
             hierarchy.SetPriorityArrayName(parray.GetName())
-    label_mapper = vtk.vtkLabelPlacementMapper()
-    label_mapper.SetInputConnection(hierarchy.GetOutputPort())
+    label_pos_mapper = vtk.vtkLabelPlacementMapper()
+    label_pos_mapper.SetInputConnection(hierarchy.GetOutputPort())
+    label_strat = label_pos_mapper.GetRenderStrategy() # vtk.vtkFreeTypeLabelRenderStrategy()
+    label_strat.SetDefaultTextProperty(label_prop)
+    label_pos_mapper.SetRenderStrategy(label_strat)
     if vtk.VTK_MAJOR_VERSION <= 5:
         hierarchy.SetInput(label_polydata)
     else:
         hierarchy.SetInputData(label_polydata)
     label_actor = vtk.vtkActor2D()
-    label_actor.SetMapper(label_mapper)
+    label_actor.SetMapper(label_pos_mapper)
     return label_actor
 
 
@@ -108,11 +116,11 @@ def nrngraph2vtk(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecol
     # radius.SetNumberOfValues(len(neuron_graph))
     radius.SetNumberOfValues(len(neuron_graph))
     for ii, n in enumerate(neuron_graph.nodes()):
-        nodes.SetPoint(ii,(neuron_graph.node[n]['x'],
-                                 neuron_graph.node[n]['y'],
-                                 neuron_graph.node[n]['z']))
+        nodes.SetPoint(ii,(neuron_graph.nodes[n]['x'],
+                                 neuron_graph.nodes[n]['y'],
+                                 neuron_graph.nodes[n]['z']))
         node_map[n] = ii
-        radius.SetValue(ii, neuron_graph.node[n]['r'])
+        radius.SetValue(ii, neuron_graph.nodes[n]['r'])
     
     cell_arr = vtk.vtkCellArray()
     colors = vtk.vtkUnsignedCharArray()
@@ -124,8 +132,8 @@ def nrngraph2vtk(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecol
         line.GetPointIds().SetId(0, node_map[n0])
         line.GetPointIds().SetId(1, node_map[n1])
         cell_arr.InsertNextCell(line)
-        colors.SetTuple3(ii, *nodecolor[neuron_graph.node[n0]['s'] % len(nodecolor)])
-        # radius.SetValue(ii, 0.5*(neuron_graph.node[n0]['r']+neuron_graph.node[n1]['r']))
+        colors.SetTuple3(ii, *nodecolor[neuron_graph.nodes[n0]['s'] % len(nodecolor)])
+        # radius.SetValue(ii, 0.5*(neuron_graph.nodes[n0]['r']+neuron_graph.nodes[n1]['r']))
     polydat = vtk.vtkPolyData()
     polydat.SetPoints(nodes)
     polydat.SetLines(cell_arr)
@@ -159,7 +167,11 @@ def nrngraph2vtk(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecol
     renderer.SetBackground(*background)
     renderer.AddActor(actor)
     if len(label_nodes) > 0:
-        label_actor = create_labels(neuron_graph, label_nodes, labels=labels, priorities=priorities)
+        label_actor = create_labels(neuron_graph, label_nodes, labels=labels,
+                                    priorities=priorities,
+                                    color=(1 - background[0],
+                                           1 - background[1],
+                                           1 - background[2]))
         renderer.AddActor2D(label_actor)
 
     return renderer, actor
