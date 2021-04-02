@@ -241,9 +241,9 @@ def eucd(G, n1, n2):
 
     Assumes there exist attributes x, y and z for each node.
     """
-    return np.sqrt((G.node[n1]['x'] - G.node[n2]['x'])**2
-                   + (G.node[n1]['y'] - G.node[n2]['y'])**2 +
-                   (G.node[n1]['z'] - G.node[n2]['z'])**2)
+    return np.sqrt((G.nodes[n1]['x'] - G.nodes[n2]['x'])**2
+                   + (G.nodes[n1]['y'] - G.nodes[n2]['y'])**2 +
+                   (G.nodes[n1]['z'] - G.nodes[n2]['z'])**2)
 
 
 
@@ -279,12 +279,12 @@ def tograph(source):
             g.add_edge(row['p'], row['n'])
         else:
             g.add_node(row['n'])
-        g.node[row['n']]['x'] = row['x']
-        g.node[row['n']]['y'] = row['y']
-        g.node[row['n']]['z'] = row['z']
-        g.node[row['n']]['r'] = row['r']
-        g.node[row['n']]['p'] = row['p']
-        g.node[row['n']]['s'] = row['s']
+        g.nodes[row['n']]['x'] = row['x']
+        g.nodes[row['n']]['y'] = row['y']
+        g.nodes[row['n']]['z'] = row['z']
+        g.nodes[row['n']]['r'] = row['r']
+        g.nodes[row['n']]['p'] = row['p']
+        g.nodes[row['n']]['s'] = row['s']
     # Store physical length of each edge
     # UPDATE: networkx2.0 removed Graph.edges_iter
     if nx.__version__.startswith('1.') or nx.__version__.startswith('0.'):
@@ -301,7 +301,7 @@ def toswc(G, filename):
     with open(filename, 'w') as fd:
         for n in sorted(G.nodes()):
             try:
-                fd.write('{} {s} {x:.3f} {y:.3f} {z:.3f} {r:.3f} {p}\n'.format(n, **G.node[n]))
+                fd.write('{} {s} {x:.3f} {y:.3f} {z:.3f} {r:.3f} {p}\n'.format(n, **G.nodes[n]))
             except KeyError as e:
                 print('Error with node', n, ':', e)
 
@@ -391,14 +391,14 @@ def remove_null_edges(G, n0, n1=None, attr='length', lim=0.1, rtol=1e-5, atol=1e
     WARNING: it modifies G itself and the nodes should renumbered.
     """
     for n in list(nx.all_neighbors(G, n0)):
-        if n != G.node[n0]['p']:
+        if n != G.nodes[n0]['p']:
             remove_null_edges(G, n, n0, rtol=rtol, atol=atol)
     if n1 is None:
         return
     if np.isclose(G[n0][n1][attr], 0.0, rtol=rtol, atol=atol):
         for n in list(nx.all_neighbors(G, n0)):
             if n not in G.neighbors(n0):
-                G.node[n]['p'] = n1
+                G.nodes[n]['p'] = n1
                 G.add_edge(n, n1, G[n][n0])
         G.remove_node(n0)
 
@@ -419,7 +419,7 @@ def remove_shorter_edges(G, n0=1, lim=0.1, verbose=False):
                     if verbose:
                         print('removing', n0, '->', n, 'of length', G[n0][n]['length'])
                     for n2 in list(G.neighbors(n)):
-                        G.node[n2]['p'] = n0
+                        G.nodes[n2]['p'] = n0
                         G.add_edge(n0, n2, length=G[n][n2]['length'])
                     G.remove_node(n)
                     todo[n2] = None
@@ -497,12 +497,12 @@ def renumber_nodes(G, start=1):
         else:
             node_map[n1] = m1
             ret.add_node(m1)
-            ret.node[m1].update(G.node[n1])
+            ret.nodes[m1].update(G.nodes[n1])
         node_map[n2] = m2
         ret.add_edge(m1, m2, length=G[n1][n2])
-        ret.node[m2].update(G.node[n2])
-        ret.node[m2]['p'] = m1
-    ret.node[1]['p'] = -1
+        ret.nodes[m2].update(G.nodes[n2])
+        ret.nodes[m2]['p'] = m1
+    ret.nodes[1]['p'] = -1
     return ret, node_map
 
 
@@ -518,23 +518,23 @@ def update_thin_segs(G, n=1, lim=0.1, default=None, verbose=False):
     while len(stack) > 0:
         n = stack[-1]
         stack.pop()
-        attr = G.node[n]
+        attr = G.nodes[n]
         if attr['r'] < lim:
             rcmax = 0.0
             for c in list(G.neighbors(n)):
-                rc = G.node[c]['r']
+                rc = G.nodes[c]['r']
                 if rcmax < rc:
                     rcmax = rc
             parent = attr['p']
             if parent > 0:
-                rp = G.node[parent]['r']
+                rp = G.nodes[parent]['r']
             else:
                 rp = rcmax
             r = (rp + rcmax) * 0.5
             if r > lim:
-                G.node[n]['r'] = r
+                G.nodes[n]['r'] = r
             else:
-                G.node[n]['r'] = default
+                G.nodes[n]['r'] = default
                 if verbose:
                     print('Node {} radius set to default {}.'.format(n, default))
             stack += list(G.neighbors(n))
@@ -612,7 +612,7 @@ def eleclen(g, rm_sp=1000.0, ra_sp=100.0, avg_dia=False, inplace=False):
     g2 = g if inplace else g.copy()
     rratio = 1e4 * rm_sp / ra_sp    # 1e4 to convert cm to um
     for n0, n1 in nx.dfs_edges(g2):
-        rad = (0.5 * (g2.node[n0]['r'] + g2.node[n1]['r'])) if avg_dia else g2.node[n0]['r']
+        rad = (0.5 * (g2.nodes[n0]['r'] + g2.nodes[n1]['r'])) if avg_dia else g2.nodes[n0]['r']
         g2[n0][n1]['L'] = g2[n0][n1]['length'] / np.sqrt(rad * rratio)
     return g2
 
@@ -629,14 +629,14 @@ def join_neurites(left, leftnode, right, rightnode, leftroot=None):
     label_map = {node: node+lmax for node in right.nodes()}
     relabeled = nx.relabel_nodes(right, label_map)
     for node in relabeled:
-        relabeled.node[node]['p'] += lmax
-        relabeled.node[node]['x'] += (left.node[leftnode]['x'] -
-                                      right.node[rightnode]['x'])
-        relabeled.node[node]['y'] += (left.node[leftnode]['y'] -
-                                      right.node[rightnode]['y'])
-        relabeled.node[node]['z'] += (left.node[leftnode]['z'] -
-                                      right.node[rightnode]['z'])
-    relabeled.node[label_map[rightnode]]['p'] = leftnode
+        relabeled.nodes[node]['p'] += lmax
+        relabeled.nodes[node]['x'] += (left.nodes[leftnode]['x'] -
+                                      right.nodes[rightnode]['x'])
+        relabeled.nodes[node]['y'] += (left.nodes[leftnode]['y'] -
+                                      right.nodes[rightnode]['y'])
+        relabeled.nodes[node]['z'] += (left.nodes[leftnode]['z'] -
+                                      right.nodes[rightnode]['z'])
+    relabeled.nodes[label_map[rightnode]]['p'] = leftnode
     combined = nx.union(left, relabeled)
     combined.add_edge(leftnode, label_map[rightnode], length=0.0)
     if leftroot is None:
