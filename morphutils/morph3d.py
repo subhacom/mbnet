@@ -7,9 +7,9 @@
 # Created: Thu Jul 14 18:34:15 2016 (-0400)
 # Version:
 # Package-Requires: ()
-# Last-Updated: Thu Sep  6 16:58:04 2018 (-0400)
+# Last-Updated: Sat Apr  3 09:38:04 2021 (-0400)
 #           By: Subhasis Ray
-#     Update #: 1389
+#     Update #: 1390
 # URL:
 # Doc URL:
 # Keywords:
@@ -371,7 +371,7 @@ if __name__ == '__main__':
     cell_rot = {}
     label_nodes = defaultdict(list)
     for ii, fname in enumerate(args.filenames):
-        cg = ng.tograph(fname)
+        cg = ng.swc2graph(fname)
         cell_graphs[fname] = cg
         if ii < len(args.mirror):
             maxes = args.mirror[ii].split()

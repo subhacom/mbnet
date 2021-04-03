@@ -127,7 +127,9 @@ nodecolor_10cs3 = {
     9: (188, 128, 189)
 }
 
-nodecolor_7q = { # Alternative Scheme for Qualitative Data from https://personal.sron.nl/~pault/
+#: Alternative Scheme for Qualitative Data from
+#: https://personal.sron.nl/~pault/
+nodecolor_7q = { 
     0: (187, 187, 187),
     1: (102, 204, 238),
     2: (68, 119, 170),
@@ -137,7 +139,8 @@ nodecolor_7q = { # Alternative Scheme for Qualitative Data from https://personal
     6: (34, 136, 51)
 }
 
-nodecolor_7cp = {  # 7-class paired from colorbrewer2.org
+#: 7-class paired from colorbrewer2.org
+nodecolor_7cp = {  
     0: (166, 206, 227),
     1: (31, 120, 180),
     2: (178, 223, 138),
@@ -147,7 +150,8 @@ nodecolor_7cp = {  # 7-class paired from colorbrewer2.org
     6: (253, 191, 111),
 }
 
-nodecolor_7cd2 = { # 7 class dark 2
+#: 7 class dark 2
+nodecolor_7cd2 = { 
     0: (127, 158, 119),
     1: (217, 95, 2),
     2: (117, 112, 179),
@@ -167,7 +171,8 @@ nodecolor_7ca = {
     6: (191, 91, 23),
 }
 
-nodecolor_9q = { # https://personal.sron.nl/~pault/colourschemes.pdf, SRON EPS technical note
+#: https://personal.sron.nl/~pault/colourschemes.pdf, SRON EPS technical note
+nodecolor_9q = { 
     0 : (136, 204, 238),
     1 : (221, 204, 119),
     2 : (68, 170, 153),
@@ -179,7 +184,8 @@ nodecolor_9q = { # https://personal.sron.nl/~pault/colourschemes.pdf, SRON EPS t
     8 : (136, 34, 85),
 }
 
-nodecolor_15cb = { # colorblind friendly
+#: colorblind friendly
+nodecolor_15cb = { 
     0: (0, 0, 0),     #000000
     1: (0, 73, 73),     #004949   # soma
     2: (0, 146, 146),     #009292
@@ -196,6 +202,7 @@ nodecolor_15cb = { # colorblind friendly
     13: (36, 255, 36),     #24ff24
     14: (255, 255, 109),     #ffff6d
 }
+
 
 colormaps = {'3cd2': nodecolor_3cd2,
              '3cs2': nodecolor_3cs2,
@@ -246,8 +253,7 @@ def eucd(G, n1, n2):
                    (G.nodes[n1]['z'] - G.nodes[n2]['z'])**2)
 
 
-
-def tograph(source):
+def swc2graph(source):
     """Convert an SWC file into a networkx DiGraph.
 
     Parameters
@@ -275,7 +281,6 @@ def tograph(source):
     g = nx.DiGraph()
     for row in data:
         if row['p'] >= 0:
-            #print('Adding edge', row['n'], row['p'])
             g.add_edge(row['p'], row['n'])
         else:
             g.add_node(row['n'])
@@ -296,21 +301,37 @@ def tograph(source):
     return g
 
 
-def toswc(G, filename):
+def graph2swc(G, filename):
     """Save the morphology in graph G as an swc file"""
     with open(filename, 'w') as fd:
         for n in sorted(G.nodes()):
             try:
-                fd.write('{} {s} {x:.3f} {y:.3f} {z:.3f} {r:.3f} {p}\n'.format(n, **G.nodes[n]))
+                fd.write('{} {s} {x:.3f} {y:.3f} {z:.3f} {r:.3f} {p}\n'.format(
+                    n, **G.nodes[n]))
             except KeyError as e:
                 print('Error with node', n, ':', e)
 
+                
+def numpy2swc(swc, filename):
+    """Convert numpy array into SWC.
+
+    Parameters
+    ----------
+    swc: np.ndarray or np.recarray
+        The columns in swc array (recarray) must be:
+        id, type, x, y, z, r, parentid
+    filename: path of the SWC file to save data in.
+    """
+    np.savetxt(filename, swc, '%d %d %.6f %.6f %.6f %.6f %d')
+    
 
 def sorted_edges(G, attr='length', reverse=False):
     """Sort the edges by attribute `attr`, defaults to `length`"""
     if nx.__version__.startswith('1.') or nx.__version__.startswith('0.'):
-        return sorted(G.edges_iter(), key=lambda x: G[x[0]][x[1]][attr], reverse=reverse)
-    return sorted(list(G.edges), key=lambda x: G.edges[x[0], x[1]][attr], reverse=reverse)
+        return sorted(G.edges_iter(), key=lambda x: G[x[0]][x[1]][attr],
+                      reverse=reverse)
+    return sorted(list(G.edges), key=lambda x: G.edges[x[0], x[1]][attr],
+                  reverse=reverse)
 
 
 def branch_points(G):
@@ -326,7 +347,8 @@ def branch_points(G):
 
 def n_branch(G):
     """Number of branches in cell graph G"""
-    return sum([d for n, d in branch_points(G)]) + 1  # +1 For the tree trunk from soma
+    # +1 For the tree trunk from soma
+    return sum([d for n, d in branch_points(G)]) + 1 
 
 
 def get_stype_node_map(g):
@@ -384,7 +406,8 @@ def select_random_items_by_key(listdict, keys, counts, replace=False):
     return ret
 
 
-def remove_null_edges(G, n0, n1=None, attr='length', lim=0.1, rtol=1e-5, atol=1e-8):
+def remove_null_edges(G, n0, n1=None, attr='length', lim=0.1,
+                      rtol=1e-5, atol=1e-8):
     """Recursively remove edges in G starting with [n0->n1] if the edge has
     attribute attr=0.
 
@@ -417,7 +440,8 @@ def remove_shorter_edges(G, n0=1, lim=0.1, verbose=False):
             for n in list(nx.neighbors(G, n0)):
                 if G[n0][n]['length'] < lim:
                     if verbose:
-                        print('removing', n0, '->', n, 'of length', G[n0][n]['length'])
+                        print('removing', n0, '->', n, 'of length',
+                              G[n0][n]['length'])
                     for n2 in list(G.neighbors(n)):
                         G.nodes[n2]['p'] = n0
                         G.add_edge(n0, n2, length=G[n][n2]['length'])
@@ -443,9 +467,11 @@ def remove_longer_edges(G, lim=100.0, verbose=False):
     for n0, n1 in edges:
         if G[n0][n1]['length'] > lim:
             if verbose:
-                print('long edge: {} -- {}: {} um'.format(n0, n1, G[n0][n1]['length']))
+                print('long edge: {} -- {}: {} um'.format(
+                    n0, n1, G[n0][n1]['length']))
             long_edges.append((n0, n1))
-        else: # edges are already sorted in descending order, skip shorter edges
+        else:
+            # edges are already sorted in descending order, skip shorter edges
             break
     components = []
     if len(long_edges) > 0:
@@ -461,7 +487,8 @@ def remove_longer_edges(G, lim=100.0, verbose=False):
     return components, long_edges
 
 
-def cleanup_morphology(G, start=1, lmin=0.1, rmin=0.1, rdefault=0.5, verbose=False):
+def cleanup_morphology(G, start=1, lmin=0.1, rmin=0.1, rdefault=0.5,
+                       verbose=False):
     """Remove edges that are shorter than lmin and with radius less than
     rmin.
 
@@ -471,7 +498,6 @@ def cleanup_morphology(G, start=1, lmin=0.1, rmin=0.1, rdefault=0.5, verbose=Fal
     update_thin_segs(Gtmp, start, lim=rmin, default=rdefault, verbose=verbose)
     Gnew, nmap = renumber_nodes(Gtmp, start=start)
     return Gnew, nmap
-
 
 
 def renumber_nodes(G, start=1):
@@ -536,7 +562,8 @@ def update_thin_segs(G, n=1, lim=0.1, default=None, verbose=False):
             else:
                 G.nodes[n]['r'] = default
                 if verbose:
-                    print('Node {} radius set to default {}.'.format(n, default))
+                    print('Node {} radius set to default {}.'.format(
+                        n, default))
             stack += list(G.neighbors(n))
 
 
@@ -575,6 +602,7 @@ def soma_branch_len(g):
 
     return distdict
 
+
 def eleclen(g, rm_sp=1000.0, ra_sp=100.0, avg_dia=False, inplace=False):
     """Compute electrotonic length of each edge in `g` assuming specific
     membrane resistance rm_sp (default 1000 Ohm-cm2) and specific
@@ -612,7 +640,8 @@ def eleclen(g, rm_sp=1000.0, ra_sp=100.0, avg_dia=False, inplace=False):
     g2 = g if inplace else g.copy()
     rratio = 1e4 * rm_sp / ra_sp    # 1e4 to convert cm to um
     for n0, n1 in nx.dfs_edges(g2):
-        rad = (0.5 * (g2.nodes[n0]['r'] + g2.nodes[n1]['r'])) if avg_dia else g2.nodes[n0]['r']
+        rad = ((0.5 * (g2.nodes[n0]['r'] + g2.nodes[n1]['r']))
+               if avg_dia else g2.nodes[n0]['r'])
         g2[n0][n1]['L'] = g2[n0][n1]['length'] / np.sqrt(rad * rratio)
     return g2
 
@@ -631,11 +660,11 @@ def join_neurites(left, leftnode, right, rightnode, leftroot=None):
     for node in relabeled:
         relabeled.nodes[node]['p'] += lmax
         relabeled.nodes[node]['x'] += (left.nodes[leftnode]['x'] -
-                                      right.nodes[rightnode]['x'])
+                                       right.nodes[rightnode]['x'])
         relabeled.nodes[node]['y'] += (left.nodes[leftnode]['y'] -
-                                      right.nodes[rightnode]['y'])
+                                       right.nodes[rightnode]['y'])
         relabeled.nodes[node]['z'] += (left.nodes[leftnode]['z'] -
-                                      right.nodes[rightnode]['z'])
+                                       right.nodes[rightnode]['z'])
     relabeled.nodes[label_map[rightnode]]['p'] = leftnode
     combined = nx.union(left, relabeled)
     combined.add_edge(leftnode, label_map[rightnode], length=0.0)

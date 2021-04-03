@@ -7,9 +7,9 @@
 # Created: Wed Jul 13 17:04:41 2016 (-0400)
 # Version:
 # Package-Requires: ()
-# Last-Updated: Tue Mar 10 15:14:09 2020 (-0400)
+# Last-Updated: Sat Apr  3 09:37:58 2021 (-0400)
 #           By: Subhasis Ray
-#     Update #: 562
+#     Update #: 563
 # URL:
 # Doc URL:
 # Keywords:
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     combined_cellgraph = nx.DiGraph()
     for ii, fname in enumerate(args.filenames):
         print('Opening', fname)
-        cellgraph = ng.tograph(fname)
+        cellgraph = ng.swc2graph(fname)
         xshift, yshift, zshift = (0, 0, 0)
         print('##', args.translate)
         if len(args.translate) > ii:
