@@ -306,10 +306,11 @@ def graph2swc(G, filename):
     with open(filename, 'w') as fd:
         for n in sorted(G.nodes()):
             try:
-                fd.write('{} {s} {x:.3f} {y:.3f} {z:.3f} {r:.3f} {p}\n'.format(
+                fd.write('{} {s} {x:.6f} {y:.6f} {z:.6f} {r:.6f} {p}\n'.format(
                     n, **G.nodes[n]))
             except KeyError as e:
                 print('Error with node', n, ':', e)
+                print('Node attributes:', G.nodes[n])
 
                 
 def numpy2swc(swc, filename):
@@ -500,8 +501,13 @@ def cleanup_morphology(G, start=1, lmin=0.1, rmin=0.1, rdefault=0.5,
     return Gnew, nmap
 
 
-def renumber_nodes(G, start=1):
+def renumber_nodes(G, start=1, undirected=True):
     """Renumber nodes so that NeuronLand converter does not mess up.
+
+    undirected: bool, if True convert G to undirected graph
+    first. This helps avoid problems when the order of the
+    parent-child nodes is incorrect but connections are fine.
+        
 
     Returns: (new_graph, node_map)
 
@@ -512,9 +518,10 @@ def renumber_nodes(G, start=1):
     """
     ret = nx.DiGraph()
     node_map = {}
-
+    if undirected:
+        G = G.to_undirected()
     # The nodes are connected as child->parent, we are starting from root,
-    # hence reverse
+    # hence reverse    
     for ii, (n1, n2) in enumerate(nx.dfs_edges(G, start)):
         m1 = ii+1
         m2 = ii+2
@@ -646,28 +653,33 @@ def eleclen(g, rm_sp=1000.0, ra_sp=100.0, avg_dia=False, inplace=False):
     return g2
 
 
-def join_neurites(left, leftnode, right, rightnode, leftroot=None):
+def join_neurites(left, leftnode, right, rightnode, leftroot=None,
+                  translate=False):
     """Join `leftnode` of cellgraph `left` with `rightnode` of cellgraph
     `right`.
 
-    Right will be translated to make `leftnode` and `rightnode`
+    translate: if True, `right` will be translated to make `leftnode` and `rightnode`
     overlap.
     All the nodes will be renumbered.
     """
-    lmax = max(left.nodes())
-    label_map = {node: node+lmax for node in right.nodes()}
+    dn = max(left.nodes()) + 1
+    label_map = {node: node + dn for node in right.nodes()}
     relabeled = nx.relabel_nodes(right, label_map)
+    if translate:
+        dx, dy, dz = (left.nodes[leftnode]['x'] - right.nodes[rightnode]['x'],
+                      left.nodes[leftnode]['y'] - right.nodes[rightnode]['y'],
+                      left.nodes[leftnode]['z'] - right.nodes[rightnode]['z'])
+    else:
+        dx, dy, dz = 0, 0, 0
     for node in relabeled:
-        relabeled.nodes[node]['p'] += lmax
-        relabeled.nodes[node]['x'] += (left.nodes[leftnode]['x'] -
-                                       right.nodes[rightnode]['x'])
-        relabeled.nodes[node]['y'] += (left.nodes[leftnode]['y'] -
-                                       right.nodes[rightnode]['y'])
-        relabeled.nodes[node]['z'] += (left.nodes[leftnode]['z'] -
-                                       right.nodes[rightnode]['z'])
+        relabeled.nodes[node]['p'] += dn
+        relabeled.nodes[node]['x'] += dx
+        relabeled.nodes[node]['y'] += dy
+        relabeled.nodes[node]['z'] += dz
     relabeled.nodes[label_map[rightnode]]['p'] = leftnode
     combined = nx.union(left, relabeled)
-    combined.add_edge(leftnode, label_map[rightnode], length=0.0)
+    dl = 0 if translate else np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+    combined.add_edge(leftnode, label_map[rightnode], length=dl)
     if leftroot is None:
         leftroot = min(left.nodes())
     return renumber_nodes(combined, leftroot)[0]

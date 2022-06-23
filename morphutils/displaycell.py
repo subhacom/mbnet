@@ -5,24 +5,12 @@
 # Author: Subhasis Ray
 # Maintainer:
 # Created: Wed Jul 13 17:04:41 2016 (-0400)
-# Version:
-# Package-Requires: ()
-# Last-Updated: Sat Apr  3 09:37:58 2021 (-0400)
+# Last-Updated: Thu Jun 23 04:07:54 2022 (-0400)
 #           By: Subhasis Ray
-#     Update #: 563
-# URL:
-# Doc URL:
-# Keywords:
-# Compatibility:
-#
+#     Update #: 573
 #
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
-# Commentary:
-#
-#
-#
-#
 
 # Code:
 from __future__ import print_function
@@ -34,6 +22,7 @@ import networkx as nx
 import neurograph as ng
 import morphoplot as mp
 from matplotlib import pyplot as plt
+
 # plt.style.use('ggplot')
 
 
@@ -154,6 +143,8 @@ if __name__ == '__main__':
     parser.add_argument('-F', '--fullscreen', action='store_true',
                         help='Display fullscreen (only for VTK)',
                         dest='fullscreen')
+    parser.add_argument('--save', type=str, help='Save final rendering ' + 
+                        'into file (carried out at exit)')
     args = parser.parse_args()
     module = args.module
     lines = float(args.lines)
@@ -192,7 +183,7 @@ if __name__ == '__main__':
         if ii > 0:
             maxnode = max(combined_cellgraph.nodes())
             for node in cellgraph.nodes():
-                cellgraph.node[node]['p'] += maxnode
+                cellgraph.nodes[node]['p'] += maxnode
             mapping = {n: n + maxnode for n in cellgraph.nodes()}
             cellgraph = nx.relabel_nodes(cellgraph, mapping)
         combined_cellgraph = nx.union(combined_cellgraph, cellgraph)
@@ -214,13 +205,12 @@ if __name__ == '__main__':
         neuron3d(combined_cellgraph, lines=lines, label_nodes=label_nodes,
                  labels=label_nodes, nodecolor=colormap,
                  background=background, axes=args.scalebar,
-                 fullscreen=args.fullscreen)
+                 fullscreen=args.fullscreen, save=args.save)
     elif module == 'vispy':
         neuron3d(combined_cellgraph)
     elif module == 'vpython':
         neuron3d(combined_cellgraph)
     else:
         print('Unknown module', module)
-
 #
 # displaycell.py ends here

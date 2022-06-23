@@ -7,9 +7,9 @@
 # Created: Thu Jul 14 18:34:15 2016 (-0400)
 # Version: 
 # Package-Requires: ()
-# Last-Updated: Fri Apr  2 09:24:26 2021 (-0400)
+# Last-Updated: Thu Jun 23 04:29:22 2022 (-0400)
 #           By: Subhasis Ray
-#     Update #: 731
+#     Update #: 742
 # URL: 
 # Doc URL: 
 # Keywords: 
@@ -177,7 +177,7 @@ def nrngraph2vtk(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecol
     return renderer, actor
     
 
-def neuron3d(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecolor=nodecolor_4cp, background=(0,0,0), lines=False, stereo=False, axes=True, fullscreen=True):
+def neuron3d(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecolor=nodecolor_4cp, background=(0,0,0), lines=False, stereo=False, axes=True, fullscreen=True, save=None):
     """axes: If true, show axis with scale bar info
     """
     renderer, actor = nrngraph2vtk(neuron_graph,
@@ -189,10 +189,10 @@ def neuron3d(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecolor=n
         _ax.SetNumberOfLabels(0)
         _ax.SetYAxisVisibility(False)
         _ax.SetZAxisVisibility(False)
-        _ax.SetBounds(0, 200, -600, -400, 0, 200)
+        _ax.SetBounds(0, 200, 0, 200, 0, 200)
         _ax.SetXLabel('')
         _ax.SetXOrigin(0)
-        _ax.SetYOrigin(-600)
+        _ax.SetYOrigin(0)
         _ax.SetZOrigin(0)
         color = (1.0-background[0], 1.0-background[1], 1.0-background[2])
         tprop = vtk.vtkTextProperty()
@@ -227,8 +227,18 @@ def neuron3d(neuron_graph, label_nodes=[], labels=[], priorities=[], nodecolor=n
     
     interactor.Initialize()
     interactor.Start()
+    if save is not None:
+        w2if = vtk.vtkWindowToImageFilter()
+        w2if.SetInput(win)
+        w2if.SetInputBufferTypeToRGB()
+        w2if.ReadFrontBufferOff()
+        w2if.Update()
 
-
+        writer = vtk.vtkPNGWriter()
+        writer.SetFileName(save)
+        writer.SetInputConnection(w2if.GetOutputPort())
+        writer.Write()
+        print('Saved screenshot in', save)
     
     
         
