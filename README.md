@@ -1,46 +1,75 @@
-
 This directory contains scripts for simulating the GGN model and the
-mushroom body olfactory circuit around it in NEURON 7.4 with Python
-2.7 related to the article:
+mushroom body olfactory circuit around it (originally in NEURON 7.4 with Python
+2.7) related to the article:
 
 "Feedback inhibition and its control in an insect olfactory circuit".
 Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
 
+- April 2024: Updated to run with NEURON 8.2.4 on Python 3.12 during COMBINE/Harmony-2024 Hackathon.
 
-<a id="org313face"></a>
+# Running the simulations
+  Required packages: 
+  
+  * networkx (graph data structures)
+  * neuron (simulation)
+  * sklearn (spatial clustering based connections)
+  * pint (units)
+  * pyyaml (configuration)
+  * nsdf (saving data): `pip install git+https://github.com/nsdf/nsdf.git`
+  * vtk (for 3D visualization)
+  * numpy (numerics)
+  * matplotlib (visualization)
+  
+  For testing, run simulation scripts from the root directory of this
+  repo (where this `README.md` file resides). Edit the `nrn/nrninit.sh`
+  (or `nrninit.bat` on Windows) with the path for this directory.
+  
+  If you are running from another directory, edit `nrn/nrninit.sh` and
+  set `MODEL_DIR` to the path of that directory.
+  * To initialize the environment variables run the `nrn/nrninit.sh`
+    file. For Linux/OSX with bash shell: `source nrn/nrninit.sh`
+  * You also have to build the NEURON mechanisms (.mod) files:
+
+    `nrnivmodl mb/mod`
+    
+  * To simulate GGN in isolation to study signal attenuation with
+    distance, run:
+  
+      `python mb/test_cell/ggn_voltage_attenuation_vclamp.py`
+      
+  * To simulate the PN->KC<->GGN network model, create a directory
+    called `data` for dumping simulated data and run:
+
+    `python mb/network/pn_kc_ggn_network.py`
+    
+    You may want to edit the configuration file
+    `mb/network/config.yaml` to reduce the number of cells in the
+    network and the duration of the simulation.
+
 
 # analysis
 
 -   various example scripts for analyzing simulated data.
 
 
-<a id="org1af6577"></a>
 
 # common
 
 -   `nhpp.py` : Generate times for nonhomogeneous Poisson process
 
 
-<a id="orge9319ec"></a>
 
 # mb
 
-
-<a id="org14bb4c0"></a>
-
 ## `cell_templates`
-
--   `GGN_20170309_sc.swc` : shrinkage corrected trace of GGN morphology.
+-   `GGN_20170309_sc.swc` : morphology trace of GGN shrinkage corrected for
+	methylsalicylate fixing
 -   `GGN_20170309_sc.hoc` : cell template for GGN model
 -   `kc_1_comp.hoc` : single compartmental KC model
 
 
-<a id="org6ea2f46"></a>
 
 ## mod: contains mechanism files
-
-
-<a id="orgb25354e"></a>
 
 ## network
 
@@ -64,10 +93,11 @@ Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
     template (in a data file dumped by an earlier simulation).
 
 
-<a id="orgd3fb948"></a>
 
 ## slurm : utility scripts for running simulations in batch mode under slurm (on NIH biowulf).
-
+    *NOTE: Many of these scripts have hard coded absolute paths which
+    need to be updated for running in a new environment.*
+    
 -   `batch_run_remove_kcs_run.sh` : example script for running successive
     simulations after removing high spiking KCs.
 -   `circular_run` : scripts for running running successive simulations
@@ -94,7 +124,6 @@ Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
     included.
 
 
-<a id="orgb2d4314"></a>
 
 ## `test_cell`
 
@@ -104,7 +133,6 @@ Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
     arbor with voltage clamp while changing passive properties.
 
 
-<a id="org470dd85"></a>
 
 # morphutils
 
@@ -120,15 +148,16 @@ Subhasis Ray, Zane Aldworth, and Mark Stopfer; 2020. eLife.
     anatomical location.
 
 
-<a id="org39f5aa9"></a>
 
 # nrn
 
--   `nrnutils.py` : Utilities for handling NEURON model
+-   `nrnutils.py` : utilities for handling NEURON model
     -   convert a NEURON cell model into a networkx graph
     -   insert alpha synapses
     -   insert ion channel mechanisms
     -   set up recording of Vm
+- `display_celltemplate.py`: 3D visualization of the morphology of a
+  neuron specified in NEURON cell template
 -   `localized_input_output.py` : apply synaptic inputs at specified
     branches.  This scripts runs simulation with synchronous synaptic
     inputs at multiple compartments on specific branches.

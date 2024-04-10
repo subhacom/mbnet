@@ -7,9 +7,9 @@
 # Created: Tue Jul 26 16:25:53 2016 (-0400)
 # Version: 
 # Package-Requires: ()
-# Last-Updated: Mon Sep 10 16:22:32 2018 (-0400)
+# Last-Updated: Wed Apr 10 16:38:12 2024 (+0530)
 #           By: Subhasis Ray
-#     Update #: 609
+#     Update #: 614
 # URL: 
 # Doc URL: 
 # Keywords: 
@@ -37,6 +37,7 @@ from matplotlib import pyplot as plt
 
 #os.environ['NEURONHOME'] = 'c:\\nrn'
 #sys.path += ['c:\\nrn\\lib\\python', 'd:\\subhasis_ggn\\model\\common']
+
 from config import Q_, h, logger, timestamp, mypid, myjobid, nrn_version
 import nrnutils as nu
 import ephys
@@ -54,7 +55,7 @@ def make_parser():
                         dest='synnode',
                         default='soma')
     parser.add_argument('-f', '--celltemplate', type=str, help='cell template file',
-                        dest='celltemplate', default='D:/subhasis_ggn/model/mb/cell_templates/GGN_20170309_sc.hoc')    
+                        dest='celltemplate', default='mb/cell_templates/GGN_20170309_sc.hoc')    
     parser.add_argument('-c', '--cell', type=str, help='cell name',
                         dest='cellname', default='GGN_20170309_sc')
     parser.add_argument('-o', '--onset', type=float, help='onset time (ms) for synaptic input',
@@ -99,29 +100,29 @@ if __name__ == '__main__':
     #     print(node)
     # g, nmap = ng.renumber_nodes(g0, ggn.soma.name())
     reccount = args.reccount
-    good_nodes = [n for n in g0.nodes() if g0.node[n]['orig'] is not None]
+    good_nodes = [n for n in g0.nodes() if g0.nodes[n]['orig'] is not None]
     ggn.geom_nseg()  # recompute the compartmentalization
     if (reccount <= 0) or (reccount >= len(good_nodes)):
         reccount = len(good_nodes)
         print('Number of sections to record from exceeds total number. Using total:', reccount)
-    nodes = [n for n in g0.nodes() if g0.node[n]['orig'] is not None]
+    nodes = [n for n in g0.nodes() if g0.nodes[n]['orig'] is not None]
     if args.recbyreg:
         rec_regions =  [1, 5, 6, 7, 8]
         rec_nodes_by_sid = ng.select_random_nodes_by_sid(g0.subgraph(nodes), rec_regions, [reccount] * len(rec_regions))
         rec_nodes = list(np.concatenate(rec_nodes_by_sid.values()))
     else:
         rec_nodes = list(np.random.choice(nodes, size=reccount, replace=False))
-    recsecs = [g0.node[n]['orig'] for n in rec_nodes]
+    recsecs = [g0.nodes[n]['orig'] for n in rec_nodes]
     synnode = '{}.{}'.format(list(g0.nodes)[0].partition('.')[0],
                              args.synnode)
     if synnode not in g0:
         synnode = np.random.choice(g0.nodes(), size=1)[0]
     # print(synnode)
-    synsec = g0.node[synnode]['orig']
+    synsec = g0.nodes[synnode]['orig']
     while synsec is None:
         print('No section for', synnode, '.Trying a random one')
         synnode = np.random.choice(g0.nodes(), size=1)
-        synsec = g0.node[synnode]['orig']        
+        synsec = g0.nodes[synnode]['orig']        
     
     if synnode not in rec_nodes:
         recsecs.append(synsec)
@@ -173,7 +174,7 @@ if __name__ == '__main__':
                                                mypid)
     outfilepath = os.path.join(args.datadir, fname)                               
     # ggn_graph_undirected = g0.to_undirected()
-    with h5.File(outfilepath) as fd:
+    with h5.File(outfilepath, 'w') as fd:
         syninfo = fd.create_group('vclamp')
         syninfo.attrs['section'] = synsec.name()
         syninfo.attrs['clamp_voltage'] = args.vclamp

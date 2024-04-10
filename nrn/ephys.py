@@ -7,9 +7,9 @@
 # Created: Fri May  6 14:45:36 2016 (-0400)
 # Version:
 # Package-Requires: ()
-# Last-Updated: Tue Jul 24 14:56:34 2018 (-0400)
-#           By: Subhasis  Ray
-#     Update #: 924
+# Last-Updated: Wed Apr 10 16:54:48 2024 (+0530)
+#           By: Subhasis Ray
+#     Update #: 930
 
 # Commentary:
 #
@@ -57,6 +57,7 @@ class Mechanism(object):
         self.parameters = parameters
 
     def insert_into(self, section):
+        print('A' * 10, 'inserting', self.name, 'into', section.name())
         section.insert(self.name)
         for name, value in self.parameters.items():
             for segment in section:
@@ -130,7 +131,10 @@ def create_cable(name, diameter, length, nseg, RA,
     cable.cm = CM.to('uF/cm**2').m
     cable.Ra = RA.to('ohm*cm').m
     cable.nseg = nseg
+    print('%' * 100, 'here')
+    
     for mech in mechs:
+        print('#' * 10, mech)
         mech.insert_into(cable)
     if hasattr(cable, 'ek'):
         cable.ek = ek.to('mV').m

@@ -7,9 +7,9 @@
 # Created: Wed Feb 21 13:17:05 2018 (-0500)
 # Version:
 # Package-Requires: ()
-# Last-Updated: Tue Mar 10 15:42:53 2020 (-0400)
+# Last-Updated: Wed Apr 10 16:37:31 2024 (+0530)
 #           By: Subhasis Ray
-#     Update #: 2837
+#     Update #: 2838
 
 # Code:
 """This script if for creating the PN->KC<->GGN network with KC<->GGN
@@ -44,9 +44,10 @@ print('Imported all modules')
 sys.stdout.flush()
 
 warnings.filterwarnings('ignore')
-with open('network/config.yaml', 'rt') as fd:
-    netconf = yaml.load(fd)
-print('Loaded config.yaml')
+config_path = os.path.join(os.environ['MODEL_DIR'], 'mb', 'network', 'config.yaml')
+with open(config_path, 'rt') as fd:
+    netconf = yaml.load(fd, Loader=yaml.Loader)
+print(f'Loaded {config_path}')
 sys.stdout.flush()
 
 # Faking sklearn.KMeans for fake clusters87
@@ -144,7 +145,13 @@ class kc_population(object):
         """
         start = timer()
         if not hasattr(h, params['kc']['name']):
-            h.xopen(params['kc']['filename'])
+            if os.path.isabs(params['kc']['filename']):
+                kctemplate = params['kc']['filename']
+            else:
+                kctemplate = os.path.join(os.environ['MODEL_DIR'], params['kc']['filename'])
+            if not os.path.exists(kctemplate):
+                raise FileNotFoundError(f'{kctemplate} does not exist. Please correct the path in config.yaml/kc/filename')
+            h.xopen(kctemplate)
         kc_class = eval('h.{}'.format(params['kc']['name']))
         self.kcs = [kc_class() for ii in range(params['kc']['number'])]
         self.positions_3d = np.zeros((params['kc']['number'], 3))
@@ -172,7 +179,13 @@ class ggn_population(object):
         """
         start = timer()
         if not hasattr(h, params['ggn']['name']):
-            h.xopen(params['ggn']['filename'])
+            if os.path.isabs(params['ggn']['filename']):
+                ggntemplate = params['ggn']['filename']
+            else:
+                ggntemplate = os.path.join(os.environ['MODEL_DIR'], params['ggn']['filename'])
+            if not os.path.exists(ggntemplate):
+                raise FileNotFoundError(f'{ggntemplate} does not exist. Please correct the path in config.yaml/ggn/filename')
+            h.xopen(ggntemplate)
         self.ggn = eval('h.{}()'.format(params['ggn']['name']))
         for sec in self.ggn.all:
             sec.Ra = Q_(params['ggn']['RA']).to('ohm * cm').m
@@ -229,6 +242,14 @@ class ggn_population(object):
                               sec=self.ig.sec)
 
     def get_clusters(self, sid, numpos, size, random_state=None, fake=False):
+        """For structure specified by `sid` (SWC structure ID),
+        select `numpos` positions on the sections belonging to that
+        structure, and obtain spatial clusters of these positions
+        where each cluster is of size `size`.
+
+        The clustering is done by kmeans algorithm with k=`numpos // size`.
+
+        """
         sec_pos = nu.select_random_segments_by_sid(self.ggn_graph,
                                                    sid, numpos,
                                                    by_length=True,
@@ -236,7 +257,7 @@ class ggn_population(object):
         # print('numpos: {}, num secpos: {}'.format(numpos, len(sec_pos)))
         n_clust = int(round(numpos * 1.0 / size))
         if n_clust <= 1:
-            logger.info('Number of GGN position clusters <= 1. Returning Fakse clusters')
+            logger.info('Number of GGN position clusters <= 1. Returning Fake clusters')
             fake = True
             n_clust = 1  # avoid 0 for degenrate case
         kmeans, sec_list, x_list, pos_list = cluster_positions(
@@ -691,7 +712,7 @@ class pn_kc_ggn_network(object):
         if delay_std > 0:
             _delay = np.random.normal(delay, delay_std, size=len(pn_indices))
         else:
-            _delay = [delay] * len(pn_indices)
+            _delay = np.array([delay] * len(pn_indices))
         _delay[_delay < 0] = delay    # replace negative delays with mean delay
         netcons = [h.NetCon(self.pns.vecstims[ii],
                             synapse, thresh, _delay[jj], _gmax[jj], sec=kc.soma)
@@ -825,13 +846,34 @@ def make_exp2syn_one_one(kcs, sections, xpos, syn_params):
 
 
 def cluster_positions(sec_pos_list, nclust, random_state=None, fake=False):
-    """For a list of sections and corresponding segment positions [(sec,
-    x),...] `sec_pos_list`, obtain a spatial clustering of the
-    segments in 3D.
+    """For a list of sections and corresponding segment positions obtain
+    a spatial clustering of the segments in 3D. If `fake` is `False` then
+     groups of KCs will have locally reciprocal connections with GGN segments.
 
+    Parameters
+    ----------
+    sec_pos_list: list
+        list of tuples [(sec1, x1), (sec2, x2), ...] where sec1, sec2 are
+        the sections and x1, x2 are the 1D position along the section. From this
+        the actual 3D positions are retreieved in NEURON. 
+    nclust: int
+        number of clusters to construct
+    random_state: int, RandomState instance, or None (default)
+        random state to be passed on to sklearn clustering algorithm for
+        reproducibility
+    fake: bool
+        if True, KCs in each cluster are connected to random locations on GGN
+
+    Returns
+    -------
+    tuple: (kmeans, seclist, xlist, poslist)
+        kmeans: sklearn KMeans object used for clustering
+        seclist: list of the sections
+        xlist: list of 1D positions along sections
+        poslist: list of 3D positions of these poits
     """
-    print('secpos list len : {}'.format(len(sec_pos_list)))
-    print('nclust: {}'.format(nclust))
+    # print('secpos list len : {}'.format(len(sec_pos_list)))
+    # print('nclust: {}'.format(nclust))
     sec_pos_dict = defaultdict(list)
     for sec, pos in sec_pos_list:
         sec_pos_dict[sec].append(pos)
@@ -891,6 +933,9 @@ def get_model_files(model_dir, subdirs):
 
 def prerun_save(params):
     """Save model files before starting simulation"""
+    if not os.path.exists(params['output']['directory']):
+        raise FileNotFoundError(f'Output directory {params["output"]["directory"]} does not exist.'
+                                'Please create it or set config.yaml/output/directory to an existing directory.')
     outfile = os.path.join(
         params['output']['directory'],
         'mb_net_UTC{}-PID{}-JID{}.h5'.format(
@@ -933,6 +978,10 @@ def save_cluster_labels(writer, region, labels, sections, xpos, pos3d, kcs):
         x, y, z = pos3d[ii]
         cluster_labels.put_data('{}_pos_{}'.format(region, ii),
                                 (label, sec.name(), pos, x, y, z))
+    # print('#' * 10, 'Number of cluster labels', len(labels))
+    # print('Sources', cluster_labels.get_sources())
+    # print('Labels', labels)
+    # print('Cluster labels', cluster_labels)
     cluster_labels_ds = writer.add_static_ds(
         '{}_cluster_labels'.format(region),
         cluster_labels.get_sources())
@@ -1177,7 +1226,9 @@ def save_recorded_data(writer, model, data_dict, params):
         sources = []
         for kc, spiketimes in zip(model.kcs.kcs, kc_spikes):
             sources.append(kc.soma.name())
-            kc_events.put_data(sources[-1], np.array(spiketimes.x))
+            st = [spiketimes.x[ii] for ii in range(spiketimes.size())]
+            # print('&' * 10, st)
+            kc_events.put_data(sources[-1], st)
         kc_spikes_ds = writer.add_event_ds_1d('kc', 'kc_spiketime',
                                               sources)
         writer.add_event_1d(kc_spikes_ds, kc_events)
@@ -1426,7 +1477,7 @@ if __name__ == '__main__':
         netconf['kc']['cluster_rs'] = args.kmseed
     if args.kc_frac_weak_inh > 0:
         netconf['ggn_kc_syn']['frac_weakly_inhibited'] = args.kc_frac_weak_inh
-    if args.ggn_kc_gmax_weak > 0:
+    if Q_(args.ggn_kc_gmax_weak).to('pS').m > 0:
         netconf['ggn_kc_syn']['gmax_weakly_inhibited'] = args.ggn_kc_gmax_weak
     if Q_(args.ig_ggn_gmax).to('pS').m >= 0:
         netconf['ig_ggn_syn']['gmax'] = args.ig_ggn_gmax

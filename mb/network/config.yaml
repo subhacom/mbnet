@@ -23,7 +23,7 @@ pn:
     shifting_frac: 0.1          # what fraction will be newly recruited at each time bin
 
 kc:
-    filename: cell_templates/kc_1_comp.hoc    # celltemplate filename
+    filename: mb/cell_templates/kc_1_comp.hoc    # celltemplate filename
     name: KC             # name of the celltemplate
     number: 50000        # total number of KCs
     lca_frac: 0.7        # fraction of KC population located in LCA / synapsed by LCA branch of GGN
@@ -34,7 +34,7 @@ kc:
     shared_pn_frac: 0.8   # fraction of PN inputs KCs in each cluster share
 
 ggn:
-    filename: cell_templates/GGN_20170309_sc.hoc      # celltemplate filename
+    filename: mb/cell_templates/GGN_20170309_sc.hoc      # celltemplate filename
     name: GGN_20170309_sc                             # celltemplate name
     RA: 100ohm*cm
     RM: 33.33kohm*cm**2
@@ -119,6 +119,6 @@ ggn_kc_syn:           # GGN->KC graded synapse : gradedsyn.mod based on Papadopo
 #     std: 1.0
 
 output:
-    directory: /data/rays3/ggn/olfactory_network    # directory to dump simulation results in
+    directory: data    # directory to dump simulation results in
     
     
