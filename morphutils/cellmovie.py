@@ -7,9 +7,9 @@
 # Created: Mon Nov  7 16:56:31 2016 (-0500)
 # Version:
 # Package-Requires: ()
-# Last-Updated: Sat Apr  3 09:37:52 2021 (-0400)
+# Last-Updated: Tue Apr  9 20:44:05 2024 (+0530)
 #           By: Subhasis Ray
-#     Update #: 197
+#     Update #: 198
 
 # Code:
 
@@ -30,9 +30,9 @@ def dump_movie(filename, neuron_graph, label_nodes=[], labels=[],
                xangle=0, yangle=0, zangle=0,
                frames_per_degree=10, framerate=25, size=(800, 600)):
     """Save the 3D display as a movie"""
-    x = [neuron_graph.node[n]['x'] for n in neuron_graph]
-    y = [neuron_graph.node[n]['y'] for n in neuron_graph]
-    z = [neuron_graph.node[n]['z'] for n in neuron_graph]
+    x = [neuron_graph.nodes[n]['x'] for n in neuron_graph]
+    y = [neuron_graph.nodes[n]['y'] for n in neuron_graph]
+    z = [neuron_graph.nodes[n]['z'] for n in neuron_graph]
     center_x = (min(x) + max(x)) * 0.5
     center_y = (min(y) + max(y)) * 0.5
     center_z = (min(z) + max(z)) * 0.5
@@ -42,9 +42,9 @@ def dump_movie(filename, neuron_graph, label_nodes=[], labels=[],
     renderer, actor = nrngraph2vtk(neuron_graph,
                                    label_nodes=label_nodes, labels=labels, priorities=priorities,
                                    nodecolor=nodecolor, background=background, lines=lines)
-    x = [neuron_graph.node[n]['x'] for n in neuron_graph]
-    y = [neuron_graph.node[n]['y'] for n in neuron_graph]
-    z = [neuron_graph.node[n]['z'] for n in neuron_graph]
+    x = [neuron_graph.nodes[n]['x'] for n in neuron_graph]
+    y = [neuron_graph.nodes[n]['y'] for n in neuron_graph]
+    z = [neuron_graph.nodes[n]['z'] for n in neuron_graph]
     center_x = (min(x) + max(x)) * 0.5
     center_y = (min(y) + max(y)) * 0.5
     center_z = (min(z) + max(z)) * 0.5

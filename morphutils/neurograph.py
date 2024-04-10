@@ -452,6 +452,26 @@ def remove_shorter_edges(G, n0=1, lim=0.1, verbose=False):
                     todo[n] = None
 
 
+def to_undirected_nrn(G):
+    """Workaround to convert graph with nodes whose attribute 'orig'
+    is neuron section"""
+    G_ = G.__class__()
+    G_.add_nodes_from(G)
+    for edge in G.edges():
+        print('#', edge)
+        G_.add_edge(*edge)
+    for node in G.nodes:
+        G_.nodes[node].update(G.nodes[node])
+        if G.nodes[node]['orig'] is not None:
+            G_.nodes[node]['orig'] = G.nodes[node]['orig'].name()
+        else:
+            G_.nodes[node]['orig'] = None
+    G2 = G_.to_undirected()
+    for node in G.nodes:
+        G2.nodes[node]['orig'] = G.nodes[node]['orig']
+    return G2
+    
+                    
 def remove_longer_edges(G, lim=100.0, verbose=False):
     """Delete the edges which are longer than lim. Returns
 
@@ -475,10 +495,18 @@ def remove_longer_edges(G, lim=100.0, verbose=False):
             # edges are already sorted in descending order, skip shorter edges
             break
     components = []
+    # NEURON7.7/NetworkX 3.x sim incompatible - sections cannot be deepcopied as they cannot be pickled
+    G_ = G.__class__()
+    G_.add_nodes_from(G)
+    G_.add_edges_from(G)
+    for node in G.nodes:
+        G_.nodes[node]['orig'] = G.nodes[node]['orig'].name()
     if len(long_edges) > 0:
-        G2 = G.to_undirected()
+        G2 = G_.to_undirected()
         for (n0, n1) in long_edges:
             G2.remove_edge(n0, n1)
+        for node in G2:
+            G2.nodes[node]['orig'] = G.nodes[node]['orig']
         for sub in nx.connected_component_subgraphs(G2):
             components.append(nx.DiGraph(G.subgraph(sub.nodes())))
     else:
@@ -519,7 +547,7 @@ def renumber_nodes(G, start=1, undirected=True):
     ret = nx.DiGraph()
     node_map = {}
     if undirected:
-        G = G.to_undirected()
+        G = to_undirected_nrn(G)
     # The nodes are connected as child->parent, we are starting from root,
     # hence reverse    
     for ii, (n1, n2) in enumerate(nx.dfs_edges(G, start)):

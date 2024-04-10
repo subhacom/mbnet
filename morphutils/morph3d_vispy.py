@@ -7,9 +7,9 @@
 # Created: Thu Jul 14 11:12:07 2016 (-0400)
 # Version: 
 # Package-Requires: ()
-# Last-Updated: Tue Aug 15 13:45:46 2017 (-0400)
+# Last-Updated: Tue Apr  9 20:45:31 2024 (+0530)
 #           By: Subhasis Ray
-#     Update #: 90
+#     Update #: 92
 # URL: 
 # Doc URL: 
 # Keywords: 
@@ -40,14 +40,14 @@ def neuron3d(neuron_graph, color='blue', name='Neuron'):
     view.camera = camera
     comps = []
     for n0, n1 in neuron_graph.edges():
-        pos0 = np.array((neuron_graph.node[n0]['x'],
-                neuron_graph.node[n0]['y'],
-                neuron_graph.node[n0]['z']))
-        pos1 = np.array((neuron_graph.node[n1]['x'],
-                neuron_graph.node[n1]['y'],
-                neuron_graph.node[n1]['z']))
+        pos0 = np.array((neuron_graph.nodes[n0]['x'],
+                neuron_graph.nodes[n0]['y'],
+                neuron_graph.nodes[n0]['z']))
+        pos1 = np.array((neuron_graph.nodes[n1]['x'],
+                neuron_graph.nodes[n1]['y'],
+                neuron_graph.nodes[n1]['z']))
         mid = (pos0 + pos1)/2.0
-        comp = vis.Tube(name='{}-{}'.format(n0, n1), points=np.vstack((pos0, mid, pos1)), radius=neuron_graph.node[n0]['r'], color=color)
+        comp = vis.Tube(name='{}-{}'.format(n0, n1), points=np.vstack((pos0, mid, pos1)), radius=neuron_graph.nodes[n0]['r'], color=color)
         view.add(comp)
         comps.append(comp)
     canvas.show()

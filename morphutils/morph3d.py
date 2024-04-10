@@ -7,9 +7,9 @@
 # Created: Thu Jul 14 18:34:15 2016 (-0400)
 # Version:
 # Package-Requires: ()
-# Last-Updated: Sat Apr  3 09:38:04 2021 (-0400)
+# Last-Updated: Tue Apr  9 20:45:16 2024 (+0530)
 #           By: Subhasis Ray
-#     Update #: 1390
+#     Update #: 1391
 # URL:
 # Doc URL:
 # Keywords:
@@ -57,9 +57,9 @@ def create_labels(graph, label_nodes, labels=[], priorities=[],
     label_str = vtk.vtkStringArray()
     label_str.SetName('Labels')
     for ii, n in enumerate(label_nodes):
-        label_points.InsertNextPoint((graph.node[n]['x'],
-                                      graph.node[n]['y'],
-                                      graph.node[n]['z']))
+        label_points.InsertNextPoint((graph.nodes[n]['x'],
+                                      graph.nodes[n]['y'],
+                                      graph.nodes[n]['z']))
         if ii < len(labels):
             label = str(labels[ii])
         else:
@@ -98,9 +98,9 @@ def nrngraph2polydata(ngraph, nodecolor=ng.nodecolor_4cp, lines=False):
     nodes = vtk.vtkPoints()
     nodes.SetNumberOfPoints(len(ngraph))
     for ii, n in enumerate(ngraph.nodes()):
-        nodes.SetPoint(ii, (ngraph.node[n]['x'],
-                            ngraph.node[n]['y'],
-                            ngraph.node[n]['z']))
+        nodes.SetPoint(ii, (ngraph.nodes[n]['x'],
+                            ngraph.nodes[n]['y'],
+                            ngraph.nodes[n]['z']))
     # Create the representation of the edges
     edges = vtk.vtkCellArray()
     colors = vtk.vtkUnsignedCharArray()
@@ -112,13 +112,13 @@ def nrngraph2polydata(ngraph, nodecolor=ng.nodecolor_4cp, lines=False):
         line.GetPointIds().SetId(0, node_map[n0])
         line.GetPointIds().SetId(1, node_map[n1])
         edges.InsertNextCell(line)
-        colors.SetTuple3(ii, *nodecolor[ngraph.node[n0]['s'] % len(nodecolor)])
+        colors.SetTuple3(ii, *nodecolor[ngraph.nodes[n0]['s'] % len(nodecolor)])
     polydat = vtk.vtkPolyData()
     polydat.SetPoints(nodes)
     polydat.SetLines(edges)
     polydat.GetCellData().SetScalars(colors)
     if not lines:  # Render tree with cylinders
-        radius = np.array([ngraph.node[n]['r'] for n in ngraph])
+        radius = np.array([ngraph.nodes[n]['r'] for n in ngraph])
         radius = vtknp.numpy_to_vtk(radius, deep=True,
                                     array_type=vtk.VTK_FLOAT)
         radius.SetName('Radius')
@@ -188,7 +188,7 @@ def neuron3d(neurotree, label_nodes=[], labels=[], priorities=[],
 
     """
     mapper = vtk.vtkPolyDataMapper()
-    soma = neurotree.node[1]
+    soma = neurotree.nodes[1]
     polydata = nrngraph2polydata(neurotree, nodecolor=nodecolor,
                                  lines=lines)
     if lines <= 0.0:
@@ -377,7 +377,7 @@ if __name__ == '__main__':
             maxes = args.mirror[ii].split()
             for ax in maxes:
                 for n in cg.nodes():
-                    cg.node[n][ax] = -cg.node[n][ax]
+                    cg.nodes[n][ax] = -cg.nodes[n][ax]
         if ii < len(args.translate):
             cell_pos[fname] = [int(x) for x in args.translate[ii].split()]
         else:
